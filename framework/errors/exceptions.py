@@ -2,6 +2,11 @@ import inspect
 class BasicException(Exception):
     def __init__(self, message:str):
         super().__init__(message)
+
+class MissingEventError(BasicException):
+    def __init__(self,event_class):
+        self.message=f"The class '{event_class}' is not register as event"
+        super().__init__(self.message)
         
 class InvalidEventTypeError(BasicException):
     def __init__(self,event_class):
