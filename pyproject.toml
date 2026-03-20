@@ -1,0 +1,12 @@
+[project]
+name = "py-events"
+version = "0.1.0"
+description = "A lightweight, event-driven framework for Python. Provides an EventPublisher, middleware pipeline, and decorator-based event handlers.
+This way, anyone reading your toml knows immediately that py-event is a Python framework 
+readme = "README.md"
+authors = [{name="Juan Antonio Chao Salinas", email = "kroosismo0202@gmail.com"}]
+dependencies= ["attrs>=26.1.0"]
+
+[build-system]
+requires = ["setuptools">=61.0, "wheel"]
+build-backend = "setuptools.build_meta"

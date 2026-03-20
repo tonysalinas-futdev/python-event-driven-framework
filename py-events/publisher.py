@@ -1,10 +1,9 @@
 from singleton.singleton import Singleton
 from event import Event
-from loggingg.config import logger
 from typing import Dict,Type, List,Callable
 from event_listener import EventListener
 from errors.exceptions import MissingEventError
-from middlewares import EventMiddleware ,MiddlewarePipeline
+from middlewares import MiddlewarePipeline
 
 
 
@@ -76,7 +75,6 @@ class EventPublisher(Singleton):
         def dispatch(ev:Event):
             for listener in self.listeners[event_type]:
                 listener.method(ev)
-                logger.debug(f"Dispatching event '{event_type.__name__}' to method '{listener.method.__name__}', in_order={self.in_order}") if self.debug==True else None
         pipeline=pipelin.run_pipeline(dispatch)
         pipeline(event)
     
@@ -86,19 +84,19 @@ class EventPublisher(Singleton):
 
         if event_listener not in self.listeners[event_class]:
             self.listeners[event_class].append(event_listener)
-            logger.debug(f"Method '{event_listener.method.__name__}' subscribed to event '{event_class.__name__}'")if self.debug==True else None
+
             
 
     def unsubscribe(self, event:Type[Event], listener_method:Callable):
         for e in self.listeners[event]:
             if e.method==listener_method:
                 self.listeners[event].remove(e)
-                logger.debug(f"Unsusbcribed method {e.method.__name__} from event '{event.__name__}'")
+
     
     
     def unsubscribe_all(self):
         self.listeners.clear()
-        logger.debug(f"Events list cleared")
+
 
 
     

@@ -5,13 +5,42 @@ A lightweight event-driven framework in Python that allows you to define events,
 It is designed with clarity, maintainability, and extensibility in mind.
 
 ---
+Got it Tony — here’s the imports section rewritten in **English Markdown**, clear and concise, showing exactly how users should import from your `py-events` package:
 
-## 📂 Project Structure
+---
 
-- `event.py` → Defines the base `Event` class, from which all custom events must inherit.
-- `publisher.py` → Contains the `EventPublisher` class, the central dispatcher and subscription manager.
-- `handler.py` → Provides the `event_handler` decorator to register event handlers.
-- `middlewares.py` → Defines the base class `EventMiddleware` for creating custom middleware, and the `MiddlewarePipeline` for registering and executing all middleware components.
+## Imports
+
+The root package is **`py-event`**.  
+From there you can import the main components directly:
+
+```python
+from py-events import (
+    EventPublisher,
+    EventMiddleware,
+    MiddlewarePipeline,
+    event_handler,
+    Event
+)
+```
+
+Exceptions are imported from the `exceptions` submodule:
+
+```python
+from py-events.exceptions import (
+    MissingEventError,
+    EventSubclassRequiredError,
+    InvalidEventTypeError,
+    UnannotatedEventParameterError
+)
+
+```
+
+---
+
+This makes it clear:  
+- **Non-error classes/functions** (`EventPublisher`, `EventMiddleware`, `MiddlewarePipeline`, `event_handler`, `Event`) are imported directly from `py_event`.
+- **Errors/exceptions** are imported from `py_event.exceptions`.  
 
 ## ⚙️ Components
 
@@ -103,7 +132,12 @@ publisher.unsubscribe_all()
 
 ---
 
-### 3. `event_handler` Decorator (handler.py)
+
+Got it Tony — here’s the full documentation and examples in **English Markdown**, ready to copy‑paste directly:
+
+---
+
+## `event_handler` Decorator (`handler.py`)
 
 ```python
 def event_handler(
@@ -119,10 +153,19 @@ def event_handler(
     2. Annotation-based subscription: If `event_class` is not provided,
        parameter annotations of the function are inspected to determine
        which events to subscribe to.
+
+    Exceptions:
+    - UnannotatedEventParameterError:
+        Raised if the decorated function has parameters without type annotations.
+    - EventSubclassRequiredError:
+        Raised if the annotated parameter type is not a subclass of `Event`.
     """
 ```
 
-**Usage Example:**
+---
+
+### ✅ Correct Usage Example
+
 ```python
 @event_handler(publisher, UserLoginEvent, order=1)
 def handle_login(event: UserLoginEvent):
@@ -133,6 +176,31 @@ def handle_login(event: UserLoginEvent):
 def handle_login(event: UserLoginEvent):
     print(f"User {event.username} logged in")
 ```
+
+---
+
+### ⚠️ Example Raising `UnannotatedEventParameterError`
+
+```python
+@event_handler(publisher)
+def handle_login(event):  # ❌ Missing type annotation
+    print(f"User {event.username} logged in")
+```
+
+---
+
+### ⚠️ Example Raising `EventSubclassRequiredError`
+
+```python
+class NotAnEvent:
+    pass
+
+@event_handler(publisher)
+def handle_invalid(event: NotAnEvent):  # ❌ Not a subclass of Event
+    print("This should never be executed")
+```
+
+---
 
 ### Example: Using EventMiddleware
 
