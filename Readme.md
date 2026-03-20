@@ -11,8 +11,7 @@ It is designed with clarity, maintainability, and extensibility in mind.
 - `event.py` → Defines the base `Event` class, from which all custom events must inherit.
 - `publisher.py` → Contains the `EventPublisher` class, the central dispatcher and subscription manager.
 - `handler.py` → Provides the `event_handler` decorator to register event handlers.
-
----
+- `middlewares.py` → Defines the base class `EventMiddleware` for creating custom middleware, and the `MiddlewarePipeline` for registering and executing all middleware components.
 
 ## ⚙️ Components
 
@@ -21,25 +20,45 @@ It is designed with clarity, maintainability, and extensibility in mind.
 ```python
 class Event:
     """
-    Base class for all events in the framework.
+    Immutable base class for all events in the framework.
 
-    Every custom event should inherit from this class. It provides two
-    automatically generated attributes that uniquely identify and timestamp
-    each event instance:
+    Every custom event must inherit from this class. Because the base class
+    is decorated with `@attr.frozen`, all subclasses are automatically frozen
+    as well. This ensures that event instances cannot be modified after
+    creation, preserving consistency and traceability across the system.
 
     Attributes:
-        id (uuid.UUID): A unique identifier automatically assigned to the event.
-        timestamp (datetime.datetime): The exact date and time when the event
-            instance was created.
+        id (uuid.UUID): A unique identifier automatically generated when
+            the event is created.
+        timestamp (datetime.datetime): The exact date and time when the
+            event instance was created.
+        type (str): The name of the event class, useful for distinguishing
+            event types during dispatching and logging.
+
+    Usage:
+        @attr.frozen
+        class UserLoginEvent(Event):
+            username: str
+
+        # Example instantiation
+        login_event = UserLoginEvent("John Doe")
+        print(login_event.id)        # Unique UUID
+        print(login_event.timestamp) # Creation time
+        print(login_event.type)      # "UserLoginEvent"
+
     """
 ```
 
 **Usage Example:**
 ```python
-class UserLoginEvent(Event):
-    def __init__(self, username: str):
-        super().__init__()
-        self.username = username
+      @attr.frozen
+        class UserLoginEvent(Event):
+            username: str
+                    # Example instantiation
+        login_event = UserLoginEvent("John Doe")
+        print(login_event.id)        # Unique UUID
+        print(login_event.timestamp) # Creation time
+        print(login_event.type)      # "UserLoginEvent"
 ```
 
 ---
@@ -130,10 +149,9 @@ def handle_login(event: UserLoginEvent):
 
 ```python
 # event.py
-class UserLoginEvent(Event):
-    def __init__(self, username: str):
-        super().__init__()
-        self.username = username
+      @attr.frozen
+        class UserLoginEvent(Event):
+            username: str
 
 # handler.py
 @event_handler(publisher, UserLoginEvent, order=1)
@@ -142,23 +160,6 @@ def handle_login(event: UserLoginEvent):
 
 # main.py
 publisher.publish(UserLoginEvent(username="Tony"))
-```
-
----
-
-## 🗑️ Housekeeping
-
-Add a `.gitignore` to keep your repo clean:
-
-```
-*pruebas.py
-__pycache__/
-*.pyc
-venv/
-.env/
-*.log
-.vscode/
-.idea/
 ```
 
 ---

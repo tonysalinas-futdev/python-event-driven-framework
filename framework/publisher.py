@@ -4,10 +4,14 @@ from loggingg.config import logger
 from typing import Dict,Type, List,Callable
 from event_listener import EventListener
 from errors.exceptions import MissingEventError
+from middlewares import EventMiddleware ,MiddlewarePipeline
+
+
+
+pipelin=MiddlewarePipeline()
 
 class EventPublisher(Singleton):
-    class EventPublisher(Singleton):
-        """
+    """
     Central event dispatcher and subscription manager.
 
     The EventPublisher is responsible for managing event listeners and
@@ -68,15 +72,19 @@ class EventPublisher(Singleton):
             raise MissingEventError(event_type.__name__)
         if self.in_order==True:
             self.listeners[event_type].sort(key=lambda o: (o.order is None, o.order))
-        for listener in self.listeners[event_type]:
-            listener.method(event)
-            logger.debug(f"Dispatching event '{event_type.__name__}' to method '{listener.method.__name__}', in_order={self.in_order}") if self.debug==True else None
+
+        def dispatch(ev:Event):
+            for listener in self.listeners[event_type]:
+                listener.method(ev)
+                logger.debug(f"Dispatching event '{event_type.__name__}' to method '{listener.method.__name__}', in_order={self.in_order}") if self.debug==True else None
+        pipeline=pipelin.run_pipeline(dispatch)
+        pipeline(event)
     
     def subscribe(self,event_class:Type[Event], event_listener:EventListener):
         if event_class not in self.listeners:
             self.listeners[event_class] = []
 
-        if EventListener not in self.listeners[event_class]:
+        if event_listener not in self.listeners[event_class]:
             self.listeners[event_class].append(event_listener)
             logger.debug(f"Method '{event_listener.method.__name__}' subscribed to event '{event_class.__name__}'")if self.debug==True else None
             
@@ -91,8 +99,6 @@ class EventPublisher(Singleton):
     def unsubscribe_all(self):
         self.listeners.clear()
         logger.debug(f"Events list cleared")
-        
-        
-        
-                
+
+
     

@@ -1,56 +1,69 @@
-from publisher import EventPublisher
+from publisher import EventPublisher,pipelin
 from handler import event_handler
 from event import Event
-
+from middlewares import EventMiddleware
+import attr
 publisher_instance=EventPublisher(debug=True, in_order=True)
 
+@attr.frozen
 class LoginIntentEvent(Event):
-    def __init__(self, email,name):
-        super().__init__()
-        self.email=email
-        self.name=name
+    email:str
+    name:str
         
-
+@attr.frozen
 class UserInBdEvent(Event):
-    def __init__(self, email,name):
-        super().__init__()
-        self.email=email
-        self.name=name
+    email:str
+    name:str
+
+@attr.frozen
+class CredencialesCorrectasEvent(Event):
+    email:str
+    name:str
+
+class PrintMiddleware(EventMiddleware):
+    def __init__(self, order = 2):
+        super().__init__(order)
+    
+    def around(self, event:LoginIntentEvent, next_middl):
+            print(f"Logueando el evento {event.__class__.__name__}")
+            result=next_middl(event)
+            print(f"Se completoel evento {event.__class__.__name__}")
+            return result
 
 
-class AnotherEvent(Event):
-    def __init__(self, email,name):
-        super().__init__()
-        self.email=email
-        self.name=name
-
-
+class SaludoMiddleware(EventMiddleware):
+    def __init__(self, order = 1):
+        super().__init__(order)
+    
+    def around(self, event:LoginIntentEvent, next_middl):
+            print(f"Holaaaa {event.__class__.__name__}")
+            result=next_middl(event)
+            return result
+        
+                
 def publish_login_event(event:LoginIntentEvent):
     publisher_instance.publish(event)
 
 @event_handler(publisher=publisher_instance, event_class=LoginIntentEvent)    
 def handleUserLoginEvent(event: LoginIntentEvent):
+    print(f"El usuario {event.name} está intentando iniciar sesión")
+    publisher_instance.publish(CredencialesCorrectasEvent(event.email,event.name))
 
-    print(f"El usuario {event.name} se encuentra en la base de datos")
 
- 
-    publisher_instance.publish(UserInBdEvent(event.email,event.name))
     
 
 @event_handler(publisher=publisher_instance, order=1)    
-def handleUserLoginEvent2(event: LoginIntentEvent):
-    print(f"Se ha loggeado el inicio de sesión del usuario {event.name} ")
-    
+def handleCredencialesCorrectasEvent(event: CredencialesCorrectasEvent):
+    print(f"El usuario{event.name} tiene las credenciales correctas")
     publisher_instance.publish(UserInBdEvent(event.email,event.name))
     
 @event_handler(publisher=publisher_instance)
 def handleUserInDbEvent(event:UserInBdEvent):
-    print(f"Se ha creado la cuenta para el usuario {event.name}")
-    
+    print(f"Se ha guardado en la base de datos al usuario {event.name}")
 
+login=PrintMiddleware()
+saludo=SaludoMiddleware()
+pipelin.add(login)
+pipelin.add(saludo)
 event=LoginIntentEvent("tony@gmail.com","Tony")
 publish_login_event(event)
-print(publisher_instance.listeners)
-publisher_instance.unsubscribe_all()
-print(publisher_instance.listeners)
-publisher_instance.unsubscribe(UserInBdEvent,handleUserInDbEvent)
