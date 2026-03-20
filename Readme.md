@@ -134,6 +134,34 @@ def handle_login(event: UserLoginEvent):
     print(f"User {event.username} logged in")
 ```
 
+### Example: Using EventMiddleware
+
+```python
+from event import Event
+from middlewares import EventMiddleware, MiddlewarePipeline
+
+class UserLoginEvent(Event):
+    def __init__(self, username: str):
+        super().__init__()
+        self.username = username
+
+class LoggingMiddleware(EventMiddleware):
+    def process(self, event, next_middl):
+        print(f"[Start] {event.type}")
+        result = next_middl(event)
+        print(f"[End] {event.type}")
+        return result
+
+pipeline = MiddlewarePipeline()
+pipeline.add(LoggingMiddleware(order=1))
+
+def handle_login(event: UserLoginEvent):
+    print(f"Handling login for {event.username}")
+
+handler = pipeline.run_pipeline(handle_login)
+handler(UserLoginEvent("Tony"))
+```
+
 ---
 
 ## 🚀 Getting Started
